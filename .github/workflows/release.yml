@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag matching vX.Y.Z
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tlspect-release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Validate tag
+        id: tag
+        env:
+          VERSION_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        shell: bash
+        run: |
+          [[ "$VERSION_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          echo "tag=$VERSION_TAG" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: validate
+    uses: ./.github/workflows/build.yml
+    with:
+      source_ref: ${{ needs.validate.outputs.tag }}
+    permissions:
+      contents: read
+
+  publish:
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate.outputs.tag }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: tlspect-windows
+          path: dist
+      - name: Build source archive and verify package version
+        env:
+          VERSION_TAG: ${{ needs.validate.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/tlspect-windows.zip
+          test "v$(grep -m1 '^version = ' Cargo.toml | cut -d '"' -f2)" = "$VERSION_TAG"
+          git archive --format=zip --prefix="TLSpect-$VERSION_TAG/" HEAD > "dist/TLSpect-$VERSION_TAG-source.zip"
+          test -s "dist/TLSpect-$VERSION_TAG-source.zip"
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_TAG: ${{ needs.validate.outputs.tag }}
+        shell: bash
+        run: |
+          if gh release view "$VERSION_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "The release already exists; its assets remain unchanged."
+            exit 0
+          fi
+          gh release create "$VERSION_TAG" \
+            dist/tlspect-windows.zip "dist/TLSpect-$VERSION_TAG-source.zip" \
+            --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "TLSpect ${VERSION_TAG#v}" --generate-notes --latest

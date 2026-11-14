@@ -10,6 +10,8 @@ build = "build.rs"
 
 [dependencies]
 eframe = { version = "0.31.1", default-features = false, features = ["glow", "default_fonts"] }
+egui_extras = { version = "0.31.1", features = ["image"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
 openssl = { version = "0.10.81", features = ["vendored"] }
 x509-parser = "0.17"
 rusqlite = { version = "0.34", features = ["bundled"] }

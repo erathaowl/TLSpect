@@ -1,0 +1,63 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      source_ref:
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      CARGO_TERM_COLOR: always
+      OPENSSL_STATIC: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format Rust sources in the build workspace
+        run: cargo fmt --all
+      - name: Compile, lint and test
+        run: |
+          cargo check --all-targets
+          cargo clippy --all-targets
+          cargo test
+        shell: pwsh
+      - name: Compile standalone Windows application
+        run: cargo build --release --target x86_64-pc-windows-msvc
+      - name: Package Windows executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $exe = 'target/x86_64-pc-windows-msvc/release/tlspect.exe'
+          if (-not (Test-Path $exe)) { throw 'Missing tlspect.exe' }
+          Compress-Archive -LiteralPath $exe -DestinationPath dist/tlspect-windows.zip -CompressionLevel Optimal -Force
+          Add-Type -AssemblyName System.IO.Compression
+          $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path 'dist/tlspect-windows.zip'))
+          try {
+            if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].Name -ne 'tlspect.exe') {
+              throw 'Invalid release ZIP content'
+            }
+          } finally {
+            $zip.Dispose()
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tlspect-windows
+          path: dist/tlspect-windows.zip
+          if-no-files-found: error
