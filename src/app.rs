@@ -179,7 +179,7 @@ impl TlspectApp {
             self.leaf_selection = candidates.iter()
                 .map(|item| (item.fingerprint.clone(),
                     item.cert.subject_name().entries().next()
-                        .map(|x| x.data().to_string()).unwrap_or(item.fingerprint.clone())
+                        .and_then(|x| x.data().to_string().ok()).unwrap_or(item.fingerprint.clone())
                 )).collect();
             return;
         }

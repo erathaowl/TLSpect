@@ -12,7 +12,7 @@ fn attributes(name: &X509NameRef) -> Vec<Attribute> {
     name.entries().map(|entry| {
         let oid = entry.object().to_string();
         let name = entry.object().nid().short_name().unwrap_or("unknown").to_string();
-        let value = entry.data().to_string();
+        let value = entry.data().to_string().unwrap_or_else(|_| hex::encode_upper(entry.data().as_slice()));
         Attribute { oid, name, value }
     }).collect()
 }

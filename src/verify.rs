@@ -130,7 +130,7 @@ fn verify_with_source(
                 attempt.depth = Some(context.error_depth());
                 attempt.certificate = context.current_cert()
                     .and_then(|c| c.subject_name().entries().next())
-                    .map(|n| n.data().to_string());
+                    .and_then(|n| n.data().to_string().ok());
             }
             Ok(())
         }).map_err(|e| e.to_string())?;
