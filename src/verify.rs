@@ -105,7 +105,7 @@ fn verify_with_source(
                     for cert in chain {
                         if let Ok(parsed) = certificate_from_x509(cert.to_owned(), 0) {
                             if let Ok(mut details) = inspect(&parsed) {
-                                let is_anchor = chain.last().is_some_and(|last| {
+                                let is_anchor = chain.iter().last().is_some_and(|last| {
                                     last.to_der().ok() == cert.to_der().ok()
                                 });
                                 details.origin = Some(if is_anchor {
@@ -130,8 +130,7 @@ fn verify_with_source(
                 attempt.depth = Some(context.error_depth());
                 attempt.certificate = context.current_cert()
                     .and_then(|c| c.subject_name().entries().next())
-                    .and_then(|n| n.data().as_utf8().ok())
-                    .map(|n| n.to_string());
+                    .map(|n| n.data().to_string());
             }
             Ok(())
         }).map_err(|e| e.to_string())?;
