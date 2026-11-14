@@ -60,6 +60,17 @@ pub struct TlspectApp {
 impl TlspectApp {
     pub fn new(cc: &eframe::CreationContext<'_>, initial: Option<String>) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
+        let mut fonts = egui::FontDefinitions::default();
+        fonts.font_data.insert(
+            "JetBrains Mono Nerd Font".into(),
+            egui::FontData::from_static(
+                include_bytes!("../assets/JetBrainsMonoNerdFontMono-Regular.ttf")
+            ).into(),
+        );
+        if let Some(family) = fonts.families.get_mut(&egui::FontFamily::Monospace) {
+            family.insert(0, "JetBrains Mono Nerd Font".into());
+        }
+        cc.egui_ctx.set_fonts(fonts);
         let (sender, receiver) = mpsc::channel();
         let opened = Storage::open_default();
         let last_error = opened.as_ref().err().cloned();
@@ -491,7 +502,7 @@ impl TlspectApp {
                         changed = true;
                     }
                 });
-                ui.label("Editor font: built-in monospace");
+                ui.label("Editor font: JetBrains Mono Nerd Font Mono");
                 ui.separator();
                 if ui.button("Open database folder").clicked() {
                     if let Some(db) = &self.storage {

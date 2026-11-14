@@ -29,3 +29,5 @@ TLSpect usa OpenSSL con le CA esportate dal sistema Windows, quindi non riproduc
 I tag vX.Y.Z attivano test, build e pubblicazione di tlspect-windows.zip (con tlspect.exe) e dell'archivio ZIP del codice sorgente al tag.
 
 Licenza MIT; repository: https://github.com/erathaowl/TLSpect
+
+Il font JetBrains Mono Nerd Font Mono è incluso nell'eseguibile con licenza SIL Open Font License (assets/OFL.txt).

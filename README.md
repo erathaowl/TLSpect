@@ -40,6 +40,6 @@ This is a GUI-only Rust project: no CLI executable or Python wheel.
 
 ## Credits
 
-TLSpect is released under the MIT license, Copyright (c) 2026 erathaowl. The application's default monospace font is provided by egui. The SIL Open Font License text for the optional JetBrains Mono asset is retained under assets/OFL.txt.
+TLSpect is released under the MIT license, Copyright (c) 2026 erathaowl. The application's JetBrains Mono Nerd Font Mono is embedded in the executable under the SIL Open Font License (assets/OFL.txt).
 
 Project repository: https://github.com/erathaowl/TLSpect
