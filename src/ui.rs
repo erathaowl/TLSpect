@@ -49,7 +49,7 @@ fn draw_value(
         else { Color32::from_rgb(92, 104, 119) };
     let value_color = json_color(value, dark);
 
-    let draw_label = |ui: &mut egui::Ui| {
+    let mut draw_label = |ui: &mut egui::Ui| {
         let response = ui.horizontal(|ui| {
             ui.add(egui::Label::new(RichText::new(key).color(field_color)).selectable(true));
             let styled = RichText::new(&value_text).color(value_color).monospace();
@@ -128,6 +128,6 @@ pub fn json_text(ui: &mut egui::Ui, data: &Value) {
     });
 }
 
-pub fn selected_report_json(report: &crate::model::VerificationReport) -> Value {
+pub fn selected_report_json(report: &tlspect::model::VerificationReport) -> Value {
     serde_json::to_value(report).unwrap_or(Value::Null)
 }

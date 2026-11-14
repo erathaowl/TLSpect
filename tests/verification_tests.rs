@@ -62,7 +62,7 @@ fn certificate(
         builder.append_extension(BasicConstraints::new().critical().build().unwrap()).unwrap();
         builder.append_extension(KeyUsage::new().digital_signature().key_encipherment().build().unwrap()).unwrap();
         builder.append_extension(ExtendedKeyUsage::new().server_auth().build().unwrap()).unwrap();
-        let context = builder.x509v3_context(signer.map(|(cert, _)| cert), None);
+        let context = builder.x509v3_context(signer.map(|(cert, _)| &**cert), None);
         let san = SubjectAlternativeName::new().dns("tlspect.test").build(&context).unwrap();
         builder.append_extension(san).unwrap();
     }
